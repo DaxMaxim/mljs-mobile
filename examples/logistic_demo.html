@@ -26,31 +26,49 @@
   <h3>Prediction Result:</h3>
   <div id="result">No prediction yet</div>
 
-  <!-- Correct path: examples/ is one level down from project root -->
-  <script src="../logistic-regression.js"></script>
+<!-- Load TensorFlow.js first -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+
+<!-- Then load your regression implementation -->
+<script src="../logistic-regression.js"></script>
+
 
   <script>
-    // Tiny demo dataset (2 features)
-    const X = [[1, 2], [2, 3], [3, 4], [4, 5]];
-    const y = [0, 0, 1, 1];
+  // Dataset
+  const X = [[1,2], [2,3], [3,4], [4,5]];
+  const y = [[0], [0], [1], [1]];   // MUST be 2D for tf.tensor
 
-    // Train model on load
-    const model = new LogisticRegression();
-    model.train(X, y, 0.1, 200);
+  // Create & train model
+  const model = new LogisticRegression(
+    X,
+    y,
+    { learningRate: 0.1, iterations: 100, batchSize: 1 }
+  );
 
-    document.getElementById('predictBtn').addEventListener('click', () => {
-      const f1 = parseFloat(document.getElementById('f1').value);
-      const f2 = parseFloat(document.getElementById('f2').value);
-      const out = document.getElementById('result');
+  model.train();   // no parameters in your version
 
-      if (isNaN(f1) || isNaN(f2)) {
-        out.textContent = 'Please enter valid numbers for both features.';
-        return;
-      }
+  document.getElementById('predictBtn').addEventListener('click', () => {
+    const f1 = parseFloat(document.getElementById('f1').value);
+    const f2 = parseFloat(document.getElementById('f2').value);
+    const out = document.getElementById('result');
 
-      const pred = model.predict([f1, f2]);
-      out.innerHTML = `Predicted class: <strong>${pred}</strong>`;
+    if (isNaN(f1) || isNaN(f2)) {
+      out.textContent = 'Please enter valid numbers for both features.';
+      return;
+    }
+
+    // MUST pass 2D array for predictions
+    model.predict([[f1, f2]]).array().then(pred => {
+      const prob = pred[0][0];
+      const cls = prob > 0.5 ? 1 : 0;
+
+      out.innerHTML = `
+        Probability: <strong>${prob.toFixed(4)}</strong><br>
+        Predicted class: <strong>${cls}</strong>
+      `;
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
